@@ -1,36 +1,49 @@
 import { useState } from "react";
+import axios from "axios";
 
 const Form = () => {
-  // State to store form data
   const [formData, setFormData] = useState({
     name: "",
     desc: "",
-    img: null,  // Changed to 'null' to handle file input correctly
+    img: null,
   });
 
-  // Handle input change for text fields
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData({
       ...formData,
-      [id]: value,  // Update the corresponding field in formData
+      [id]: value,
     });
   };
 
-  // Handle file input change
   const handleFileChange = (e) => {
     console.log(e.target.files[0]);
 
     setFormData({
       ...formData,
-      img: e.target.files[0],  // Store the uploaded file
+      img: e.target.files[0],
     });
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
+
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("desc", formData.desc);
+    formDataToSend.append("img", formData.img); 
+
+    try {
+      const response = await axios.post("http://localhost:4001/feed", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Server Response:", response.data);
+    } catch (error) {
+      console.error("Error uploading data:", error);
+    }
   };
 
   return (
