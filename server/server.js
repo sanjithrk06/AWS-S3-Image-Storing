@@ -1,32 +1,34 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors'); 
-const mongoose = require('mongoose');
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import { connect } from 'mongoose';
 
-const connectDb = async() => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log("Connected to the DB");
-    } catch (error) {
-        console.error(`ERROR : ${error.message}`);
-        process.exit(1);
-    }
-}
+dotenv.config();
+
+const connectDb = async () => {
+  try {
+    await connect(process.env.MONGO_URI);
+    console.log('Connected to the DB');
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    process.exit(1);
+  }
+};
 
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
-app.get("/", (req, res)=> {
-    return res.status(200).send("Welcome to the Image Upload Server");
-})
+app.get('/', (req, res) => {
+  return res.status(200).send('Welcome to the Image Upload Server');
+});
 
-const feedRouter = require('./routes/feed.route');
+import feedRouter from './routes/feed.route.js';
 app.use('/feed', feedRouter);
 
-app.listen(process.env.PORT, async()=> {
-    await connectDb();
-    console.log("App is listening on the port :", process.env.PORT || 4001);
-})
+const port = process.env.PORT || 4001;
+app.listen(port, async () => {
+  await connectDb();
+  console.log('App is listening on the port:', port);
+});

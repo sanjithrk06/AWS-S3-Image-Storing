@@ -1,13 +1,13 @@
-const express = require('express');
+import express from 'express';
+import multer from 'multer';
+import { createFeed, getFeed } from '../controllers/feedController.js';
+
 const router = express.Router();
-const multer = require('multer');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-const feedController = require('../controllers/feedController');
+router.get('/', getFeed);
+router.post('/', upload.single('img'), createFeed);
 
-router.get('/', feedController.getFeed);
-router.post('/', upload.single('img'), feedController.createFeed);
-
-module.exports = router;
+export default router;
