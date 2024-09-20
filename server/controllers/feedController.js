@@ -1,4 +1,6 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
 import crypto from 'crypto';
 import sharp from 'sharp';
 import Feed from '../models/feed.model.js'; // Updated to ESM
@@ -10,8 +12,6 @@ const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
 const accessKey = process.env.ACCESS_KEY;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
-
-console.log("Bucket Region:", bucketRegion);
 
 const s3 = new S3Client({
   credentials: {
@@ -70,9 +70,49 @@ export const getFeed = async (req, res) => {
       return res.status(404).json({ message: 'No feeds found' });
     }
 
+    for (const feed of feeds) {
+      const getObjectParams = {
+        Bucket: bucketName,
+        Key: feed.imgName
+      };
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      feed.imgName = url;
+    }
+
     return res.status(200).json({ feeds });
   } catch (error) {
     console.error('Error fetching feeds:', error.message);
     return res.status(500).json({ message: 'Server error, could not fetch feeds' });
+  }
+};
+
+
+export const deleteFeed = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the feed by ID
+    const feed = await Feed.findById(id);
+    if (!feed) {
+      return res.status(404).json({ message: 'Feed not found' });
+    }
+
+    // Delete the image from S3
+    const params = {
+      Bucket: bucketName,
+      Key: feed.imgName,
+    };
+
+    const command = new DeleteObjectCommand(params);
+    await s3.send(command);
+
+    // Delete the feed from MongoDB
+    await Feed.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: 'Feed and associated image deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting feed:', error.message);
+    return res.status(500).json({ message: 'Server error, could not delete feed' });
   }
 };

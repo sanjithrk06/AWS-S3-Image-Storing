@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Form = () => {
   const [formData, setFormData] = useState({
@@ -7,6 +8,8 @@ const Form = () => {
     desc: "",
     img: null,
   });
+
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -41,6 +44,7 @@ const Form = () => {
       });
 
       console.log("Server Response:", response.data);
+      navigate('/');
     } catch (error) {
       console.error("Error uploading data:", error);
     }
@@ -49,7 +53,7 @@ const Form = () => {
   return (
     <div className="py-5">
       <form className="max-w-sm mx-auto" onSubmit={handleSubmit}>
-        <h1 className="pb-6 text-3xl text-center font-bold text-slate-800">Forms</h1>
+        <h1 className="pb-6 text-3xl text-center font-bold text-slate-800">Add Feed</h1>
 
         <div className="mb-5">
           <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900">
